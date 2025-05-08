@@ -19,6 +19,8 @@ knitr::opts_chunk$set(
 )
 library(tidyverse)
 library(plotly)
+library(ggplot2)
+library(ggiraph)
 library(cowplot)
 ```
 
@@ -53,19 +55,23 @@ Se generan tres gráficas que muestran la distribución de variables con patrone
 
 ```{r uni-plots}
 # 1. Distribución de edad
-ggplot(datos, aes(x = Age)) +
-  geom_histogram(bins = 30) +
-  labs(title = "Distribución de Edad")
+grafica_edad <- ggplot(datos, aes(x = Age, )) +
+  geom_histogram(bins = 30, fill = "#69b3a2", color = "black", size = 0.3) +
+  labs(title = "Distribución de Edad", x = "Edad", y = "Frecuencia")
+girafe(ggobj = grafica_edad)
 
 # 2. Conteo por sexo
-ggplot(datos, aes(x = Sex)) +
-  geom_bar() +
-  labs(title = "Conteo de Pasajeros por Sexo")
+grafica_sex <- ggplot(datos, aes(x = Sex, fill = factor(Sex),
+                                 tooltip = paste("Count:", ..count..))) +
+  geom_bar_interactive() +
+  labs(title = "Conteo de Pasajeros por Sexo", x = "Sexo", y = "Cantidad")
+girafe(ggobj = grafica_sex)
 
 # 3. Distribución de tarifa (Fare)
-ggplot(datos, aes(x = Fare)) +
-  geom_histogram(bins = 30) +
-  labs(title = "Distribución de la Tarifa")
+grafica_tarifa <- ggplot(datos, aes(x = Fare)) +
+  geom_histogram(bins = 30, fill = "#8dbf8d", color = "black", size = 0.3) +
+  labs(title = "Distribución de la Tarifa", x = "Tarifa", y = "Frecuencia")
+girafe(ggobj = grafica_tarifa)
 ```
 
 # EDA: Gráficas Bidimensionales
@@ -100,10 +106,11 @@ plot_ly(datos, x = ~Age, y = ~Fare, color = ~factor(Pclass), symbol = ~factor(Se
 
 ```{r facetas}
 # Faceta por Embarque y Sexo mostrando edad vs tarifa
-ggplot(datos, aes(x = Age, y = Fare)) +
+grafica_faceta_edad_vs_tarifa <- ggplot(datos, aes(x = Age, y = Fare)) +
   geom_point(alpha = 0.5) +
   facet_grid(Embarked ~ Sex) +
-  labs(title = "Edad vs Tarifa por Embarque y Sexo")
+  labs(title = "Edad vs Tarifa por Embarque y Sexo", x = "Edad", y = "Tarifa")
+girafe(ggobj = grafica_faceta_edad_vs_tarifa)
 ```
 
 # Imagen Compuesta
@@ -117,6 +124,45 @@ plot_grid(
   ncol = 1,
   labels = c("Tarifa", "Edad", "Supervivencia por Clase")
 )
+
+
+# Gráfico 1: Supervivencia por Clase
+df_class <- datos %>%
+  group_by(Pclass, Survived) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+fig1 <- plot_ly(df_class, x = ~as.factor(Pclass), y = ~Count, color = ~as.factor(Survived),
+                type = "bar") %>%
+  layout(title = "Supervivencia por Clase",
+         xaxis = list(title = "Clase"),
+         yaxis = list(title = "Cantidad"),
+         barmode = "group")
+
+# Gráfico 2: Distribución de Edad por Supervivencia
+fig2 <- plot_ly(datos, x = ~Age, color = ~as.factor(Survived),
+                type = "histogram", nbinsx = 30, opacity = 0.6) %>%
+  layout(title = "Distribución de Edad por Supervivencia",
+         xaxis = list(title = "Edad"),
+         yaxis = list(title = "Frecuencia"),
+         barmode = "overlay")
+
+# Gráfico 3: Supervivencia por Puerto de Embarque
+df_port <- datos %>%
+  group_by(Embarked, Survived) %>%
+  summarise(Count = n()) %>%
+  ungroup()
+
+fig3 <- plot_ly(df_port, x = ~Embarked, y = ~Count, color = ~as.factor(Survived),
+                type = "bar") %>%
+  layout(title = "Supervivencia por Puerto de Embarque",
+         xaxis = list(title = "Puerto"),
+         yaxis = list(title = "Cantidad"),
+         barmode = "group")
+
+# Composición de los tres gráficos en una fila
+subplot(fig1, fig2, fig3, nrows = 3, shareY = FALSE, titleX = TRUE, titleY = TRUE) %>%
+  layout(title = "Análisis Compuesto de Supervivencia - Titanic")
 ```
 
 # Conclusiones
