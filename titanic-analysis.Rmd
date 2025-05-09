@@ -299,15 +299,15 @@ figA <- plot_ly(datos %>% count(Sex, Survived) %>% mutate(pct = n / sum(n)),
          title = 'Porcentaje de Supervivientes por Sexo',
          xaxis = list(title = 'Sexo'),
          yaxis = list(title = 'Proporción', tickformat = '%'),
-         legend = list(title = list(text = 'Supervivió')))
+         legend = list(title = list(text = 'Sobrevivió')))
 
 # Gráfico B: Violin de Edad por Supervivencia
 grid_df <- datos %>% filter(!is.na(Age))
 figB <- plot_ly(grid_df, x = ~factor(Survived), y = ~Age, color = ~factor(Survived), type = 'violin', box = list(visible = TRUE), meanline = list(visible = TRUE)) %>%
   layout(title = 'Distribución de Edad por Supervivencia',
-         xaxis = list(title = 'Supervivió'),
+         xaxis = list(title = 'Sobrevivió'),
          yaxis = list(title = 'Edad (años)'),
-         legend = list(title = list(text = 'Supervivió')))
+         legend = list(title = list(text = 'Sobrevivió')))
 
 # Gráfico C: Densidad de Tarifas
 grid_df2 <- datos %>% filter(!is.na(Fare))
@@ -316,7 +316,7 @@ figC <- plot_ly(grid_df2, x = ~Fare, color = ~factor(Survived), type = 'histogra
          title = 'Densidad de Tarifas por Supervivencia',
          xaxis = list(title = 'Tarifa (USD)'),
          yaxis = list(title = 'Densidad'),
-         legend = list(title = list(text = 'Supervivió')))
+         legend = list(title = list(text = 'Sobrevivió')))
 
 # Combinar los tres gráficos interactivos
 subplot(figA, figB, figC, nrows = 3, shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE)
