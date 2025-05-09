@@ -73,8 +73,6 @@ Para asegurar la fiabilidad de nuestro estudio, evaluaremos también el porcenta
 
 Es ***importante*** ***aclarar*** que la falta de algunos valores podrían afectar la visualizacion estadística de los datos, por lo cual cados como "Cabina" que presentan solo un 30% de informacion, podrían no ser tan importantes de cara a evidenciar relaciones entre las variables.
 
-A continuación cargamos los datos.
-
 ```{r load-data}
 # Cargar los datos
  datos <- read_csv(params$data_path)
@@ -98,9 +96,9 @@ g1 <- ggplot(datos, aes(x = Age)) +
 girafe(ggobj = g1, width_svg = 7, height_svg = 4)
 ```
 
-> -   ¿Se forma un “pico” alrededor de los 20–30 años?\
-> -   ¿Hay un subgrupo notable de menores de 10 años o de mayores de 60?\
-> -   ¿Qué proporción de la muestra carece de dato de edad y podría afectar análisis posteriores?
+> El histograma de edades nos muestra que la mayoría de la gente a bordo del Titanic tenía entre 20 y 30 años: casi 4 de cada 10 pasajeros. Eso significa que, cuando miremos quién sobrevivió o no, gran parte de la historia vendrá de ese grupo de “veintitantos”.  
+Los niños y adolescentes (de 0 a 20 años) son menos de uno de cada cinco pasajeros. Aunque “mujeres y niños primero” suene fuerte, su pequeñísimo número hace que, en el total, su influencia sea secundaria. Habrá que ver su tasa de rescate, pero sin olvidar que son pocos casos.  
+A partir de los 30 años la cantidad de pasajeros baja sin parar: de un 20 % en los treintañeros a un 6 % en los de 50–60, y casi nadie pasa de los 60. Ese goteo de mayores indica que cualquier conclusión sobre ancianos será inestable, porque casi no hay datos de ellos.
 
 ### Conteo por Sexo
 
@@ -116,9 +114,8 @@ g2 <- ggplot(datos, aes(x = Sex, fill = Sex)) +
 girafe(ggobj = g2, width_svg = 5, height_svg = 4)
 ```
 
-> -   ¿Cuál es la proporción aproximada de hombres vs. mujeres?\
-> -   ¿Existe alguna categoría de género no habitual o datos faltantes?\
-> -   ¿Cómo podría este desequilibrio inicial influir en las comparaciones posteriores?
+> Hay 266 pasajeros hombres y 152 mujeres, es decir, los varones representan alrededor del 64 % de la muestra y las mujeres el 36 %. Este desequilibrio es nítido: por cada mujer hay casi dos hombres a bordo.  
+Dado que un sexo es mayoría y el otro minoría, cualquier análisis posterior que involucre “Sex” debe basarse en porcentajes o tasas, no en conteos absolutos, para que la comparación sea justa y no esté sesgada por el simple hecho de que hay más hombres que mujeres.
 
 ### Distribución de Tarifas
 
@@ -134,9 +131,8 @@ g3 <- ggplot(datos, aes(x = Fare)) +
 girafe(ggobj = g3, width_svg = 7, height_svg = 4)
 ```
 
-> -   ¿La mayoría de pasajeros pagó una tarifa baja (por debajo de USD 20)?\
-> -   ¿Cuántos boletos superan los USD 100 o USD 200?\
-> -   ¿Es recomendable transformar la variable para análisis posteriores (por ejemplo, `log(Fare + 1)`)?
+> La gran mayoría de los pasajeros pagó montos bajos: cerca del 80 % pagó menos de 50 USD por su pasaje. Esa concentración en tarifas crea un énfasis bien definido a la izquierda del gráfico, donde se amontonan los boletos de costo bajo  
+Además, la curva se extiende con una larga cola hacia la derecha: hay unos cuantos pasajeros que pagaron centenares de dólares, y el máximo registrado llega a aproximadamente 500 USD. Esos picos aislados de tarifa alta representan a los viajeros de primera clase, pero son muy pocos.
 
 ## EDA Bidimensional
 
@@ -151,14 +147,13 @@ Este gráfico de barras apiladas y normalizadas muestra la **proporción** de pa
 gg1 <- ggplot(datos, aes(x = factor(Pclass), fill = factor(Survived))) +
   geom_bar(position = "fill", na.rm = TRUE) +
   scale_y_continuous(labels = scales::percent) +
-  labs(title = "Proporción de Supervivientes por Clase", x = "Clase", y = "Proporción", fill = "Supervivió") +
+  labs(title = "Proporción de Supervivientes por Clase", x = "Clase", y = "Proporción", fill = "Sobrevivió") +
   theme_minimal()
 ggplotly(gg1)
 ```
 
-> -   ¿Qué porcentaje de pasajeros de Primera clase sobrevivió en comparación con Segunda y Tercera?\
-> -   ¿Existe una clara brecha entre clases alta y baja que confirme la “prioridad” de embarque?\
-> -   ¿Cómo influyen factores económicos (precio del ticket) en esta proporción?
+> Casi la mitad de quienes viajaban en primera lograron salvarse, frente a poco más de un tercio en las otras dos clases. Eso refuerza la idea de que el acceso a los botes estaba muy favorecido para los de tarifa alta.
+Aunque la tercera clase suele considerarse la más desfavorecida, aquí vemos que su tasa de supervivencia es prácticamente igual a la de la segunda. La barra de primera clase está mucho más “balanceada” que las de segunda y tercera. Eso implica que, aunque viajar en primera no garantizaba la salvación, sí doblaba la probabilidad de sobrevivir en comparación con las clases económicas.
 
 ### Edad vs Tarifa según Supervivencia
 
@@ -168,14 +163,12 @@ En esta nube de puntos coloreada por supervivencia, cruzamos **edad** (eje X) y 
 # Edad vs Tarifa según Supervivencia
 gg2 <- ggplot(datos, aes(x = Age, y = Fare, color = factor(Survived))) +
   geom_point(alpha = 0.6, na.rm = TRUE) +
-  labs(title = "Edad vs Tarifa según Supervivencia", x = "Edad (años)", y = "Tarifa (USD)", color = "Supervivió") +
+  labs(title = "Edad vs Tarifa según Supervivencia", x = "Edad (años)", y = "Tarifa (USD)", color = "Sobrevivió") +
   theme_minimal()
 ggplotly(gg2)
 ```
 
-> -   ¿Se observa que los sobrevivientes tienden a tener tarifas más altas?\
-> -   ¿Qué rango de edad muestra mayor densidad de puntos de color “sobrevivió”?\
-> -   ¿Aparecen grupos diferenciados (por ejemplo, niños de tarifa baja vs adultos de tarifa alta)?
+> No hay un rango de edad privilegiado a la hora de salvarse, pues puntos verdes (los que sobrevivieron) y rojos (los que no) se mezclan a lo largo de todo el eje vertical de la edad. En cambio, el eje de la tarifa funciona como una línea de bastante importancia: casi todos los que pagaron menos de 20 USD aproximadamente aparecen en rojo, mientras que los verdes se concentran en la zona de tarifas medias y altas. Esto nos dice que, más que la edad, lo que realmente marcó la diferencia fue el precio del pasaje.
 
 Para profundizar aún más, combinamos la categoría de **grupo etario** (“Niños”, “Adultos”, “Adultos mayores”) con la **clase de pasaje** (1ª, 2ª, 3ª) y el **resultado de supervivencia**.
 
@@ -216,6 +209,24 @@ g_age_class <- ggplot(age_class_surv,
 girafe(ggobj = g_age_class, width_svg = 9, height_svg = 5)
 ```
 
+> ### Primera clase (1ª Clase)  
+ -   Niños: sorprendentemente, ninguno de los niños que viajaba en primera clase sobrevivió (100 % fallecidos).  
+ -   Adultos: la supervivencia fue pareja, con un 50 % de los adultos salvados y un 50 % que no lo logró.  
+ -   Adultos mayores: más de la mitad salió con vida, frente a un casi 40 % que no sobrevivió.  
+Aquí, la ventaja de estar en primera clase benefició especialmente a los pasajeros de más edad, mientras que los niños tuvieron el peor desenlace.
+
+> ### Segunda clase (2ª Clase)
+ - Niños: este pequeño grupo disfrutó de un buen rescate: el 60 % de los niños de segunda clase sobrevivió.
+ - Adultos: solo el 30 % aproximadamente de los adultos salió con vida; el restante quedó detrás.
+ - Adultos mayores: ninguno de los pasajeros mayores de 60 años en segunda clase logró sobrevivir (100 % fallecidos).  
+En segunda clase la prioridad a “mujeres y niños” funcionó para los más jóvenes, pero no para los ancianos.
+
+> ### Tercera clase (3ª Clase)
+ - Niños: alrededor del 39 % de los niños de tercera clase sobrevivió, mientras que el 61 % no.
+ - Adultos: un tercio (33.3 %) de los adultos vivió, y dos tercios (66.7 %) murieron.
+ - Adultos mayores: al igual que en segunda clase, ningún mayor de 60 años en tercera clase sobrevivió.  
+En tercera clase la supervivencia fue baja en todos los grupos, ligeramente mejor para los niños, pero sin salvar a ningún anciano.
+
 ## EDA Multidimensional: Bubble Chart
 
 Más allá de dos variables, el gráfico de burbujas añade un tercer y cuarto componente: el **tamaño** de la burbuja representa la clase (`Pclass`) y el **color** indica supervivencia. Esto nos permite identificar “clusters” de pasajeros con características similares.
@@ -229,23 +240,24 @@ bubble_data <- datos %>%
   mutate(Survived = factor(Survived, labels = c("No", "Sí")))
 
 # Crear el gráfico de burbujas
-ggplot(bubble_data, aes(x = Age, y = Fare, size = Pclass, color = Survived)) +
+grafico_burbujas <- ggplot(bubble_data, aes(x = Age, y = Fare, size = Pclass, color = Survived)) +
   geom_point(alpha = 0.6) +
   labs(
     title = "Relación entre Edad, Tarifa, Clase y Supervivencia",
     x = "Edad",
     y = "Tarifa",
     size = "Clase",
-    color = "Supervivió"
+    color = "Sobrevivió"
   ) +
   theme_minimal()
 
+girafe(ggobj = grafico_burbujas)
 
 ```
 
-> -   ¿Las burbujas más grandes (Primera clase) se agrupan en zonas de tarifas altas y mayor sobrevivencia?\
-> -   ¿Existen burbujas pequeñas (Tercera clase) en la zona de baja tarifa que indiquen supervivientes “atípicos”?\
-> -   ¿Cómo se distribuye la edad dentro de cada nivel de clase y supervivencia?
+> Al observar las burbujas grandes (primera clase), vemos que casi todas en la zona de tarifas altas (por encima de 100 USD) son de color “Sí”: los pasajeros de primera que pagaron más tuvieron altas probabilidades de sobrevivir, sin importar la edad. Las burbujas grandes y rojas (“No”) aparecen solo cuando la tarifa es baja o moderada, mostrando que incluso un viajero de primera clase corría peligro si su pasaje no fue de los más caros.  
+En las burbujas de tamaño mediano (segunda clase), el color está más mezclado: hay algunos “Sí” en tarifas alrededor de 50 USD, pero muchas burbujas rojas se extienden desde precios bajos hasta medios. Aquí la edad tampoco define el color: tanto jóvenes como adultos de mediana edad mueren o sobreviven dependiendo más de cuánto pagaron que de cuántos años tenían.  
+Las burbujas pequeñas (tercera clase) están casi todas en rojo, especialmente en tarifas bajas (menores de 20 USD). Solo unas pocas tardías suben un poco en el eje y y cambian a verde, y suelen corresponder a adultos jóvenes. Los ancianos de tercera clase (pequeñas burbujas en la parte derecha del eje x) permanecen rojos, incluso si la tarifa es algo mayor.
 
 ## Facetas: Puertos de Embarque y Sexo
 
@@ -262,9 +274,14 @@ grafica_faceta <- ggplot(datos, aes(x = Age, y = Fare)) +
 girafe(ggobj = grafica_faceta, width_svg = 8, height_svg = 5)
 ```
 
-> -   ¿Los pasajeros de Cherburgo pagaron tarifas sistemáticamente más altas que los de Southampton o Queenstown?\
-> -   ¿Cómo varía la dispersión de edades entre hombres y mujeres en cada puerto?\
-> -   ¿Hay paneles con muy pocos datos donde debamos tener cuidado al interpretar?
+> ### Cherburgo (C)  
+Las pasajeras de Cherburgo exhiben las tarifas más altas de todo el conjunto de datos, con varios boletos que superan los 200 USD (alcanzando incluso 500 USD). Los hombres que embarcaron en C pagan también más que en otros puertos. En cuanto a la edad, las mujeres en C promedian alrededor de 36 años, mientras que los hombres se sitúan cerca de los 31 años, y ambos sexos muestran un rango amplio de edades.
+
+> ### Queenstown (Q)  
+Tanto mujeres como hombres de Queenstown pagan tarifas muy homogéneas, concentradas alrededor de los 7 USD.Se trata de un grupo de pasajeros con recursos limitados. Las edades se extienden desde la adolescencia hasta los cuarenta años, sin diferencias notables entre géneros.
+
+> ### Southampton (S)  
+Southampton representa un punto intermedio: las mujeres pagan alrededor de 20 USD y los hombres unos 10 USD, con la mayoría de los boletos en el rango de 7 USD a 40 USD. Hay algunos casos aislados de pasajes caros (hasta 200 USD), pero son minoría. La distribución de edades es similar para ambos sexos, con una aproximado alrededor de 25 años.
 
 ## Imagen Compuesta Interactiva
 
