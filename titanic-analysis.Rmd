@@ -19,152 +19,294 @@ knitr::opts_chunk$set(
 )
 library(tidyverse)
 library(plotly)
-library(ggplot2)
 library(ggiraph)
 library(cowplot)
 ```
 
 # Introducción
 
-Este documento presenta un Análisis Exploratorio de Datos (EDA) sobre el conjunto de datos de los sobrevivientes del Titanic. El objetivo es identificar patrones, tendencias y relaciones entre variables para comprender mejor los factores que influyeron en la supervivencia.
+En este análisis combinamos la potencia de R con un enfoque de storytelling para responder una pregunta tan intrigante como relevante: ¿Quiénes tuvieron más probabilidades de sobrevivir al hundimiento del Titanic en 1912 y por qué?. A través de una cuidadosa mezcla de texto explicativo, visualizaciones interactivas y fragmentos de código, guiaremos al lector paso a paso por el proceso de exploración de datos, asegurándonos de que cada gráfica y cada transformación refuercen la narrativa central.
 
-# Descripción del Problema
+# Contexto Histórico y Pregunta Central
 
-Durante el hundimiento del Titanic en 1912, hubo factores que influyeron en la probabilidad de supervivencia de los pasajeros. Este análisis busca responder preguntas como:
+En la madrugada del 15 de abril de 1912, el lujoso transatlántico Titanic se hundió tras chocar contra un iceberg en el Atlántico Norte. De los 2 224 pasajeros que viajaban en sus diversas cubiertas, tan solo unos pocos lograron salvarse. Este trágico suceso no solo marcó un hito en la historia naval, sino que dejó un legado de preguntas sobre cómo factores sociales y económicos determinaron quién tenía acceso a los botes salvavidas.
 
--   ¿Qué variables individuales (edad, sexo, clase) mostraron patrones de supervivencia?
--   ¿Cómo se relaciona el precio del boleto con la supervivencia?
--   ¿Existen interacciones multidimensionales que expliquen grupos de mayor riesgo?
+Nuestro objetivo en este informe no es solo reproducir cifras, sino entender la historia que cuentan los datos. Queremos responder a la gran pregunta:
 
-# Definición de Fuentes de Datos
+¿Qué combinaciones de clase social, género, edad, precio del boleto y puerto de embarque estuvieron asociadas con mayores probabilidades de supervivencia?
 
-Los datos utilizados provienen de un archivo CSV con la información de los pasajeros del Titanic, que incluye variables como:
+Para guiar este recorrido, planteamos tres hipótesis iniciales:
 
--   `Survived`: indicador de supervivencia (0 = No, 1 = Sí)
--   `Pclass`: clase de pasajero (1 = Primera, 2 = Segunda, 3 = Tercera)
--   `Name`, `Sex`, `Age`, `SibSp`, `Parch`, `Ticket`, `Fare`, `Cabin`, `Embarked`
+-   Clase social: los pasajeros de primera clase tuvieron mejores tasas de supervivencia que los de segunda y tercera.
+
+-   Género: las mujeres —y particularmente las mujeres acompañadas de niños— fueron favorecidas en los procedimientos de evacuación.
+
+-   Edad y tarifa: los niños y quienes pagaron tarifas más altas disfrutaron de una ventaja, tanto por protocolos de rescate como por ubicar sus camarotes más cerca de las cubiertas superiores.
+
+A lo largo del análisis exploraremos estas hipótesis mediante una serie de visualizaciones que mostrarán, de manera unidimensional, bidimensional y multidimensional, cómo cada factor individual y sus interacciones influyeron en el desenlace de esta tragedia.
+
+# Descripción de los Datos
+
+En esta sección presentamos de forma clara la naturaleza y alcance del conjunto de datos que sustenta nuestro análisis. El archivo tested.csv contiene registros de 891 pasajeros del Titanic, con variables demográficas, socioeconómicas y de embarque. Comprender su estructura y calidad es clave para interpretar correctamente las visualizaciones que veremos más adelante.
+
+¿Qué encontramos al inspeccionar estos datos?
+
+-   Survived: indicador binario de supervivencia (0 = no, 1 = sí).
+
+-   Pclass: clase del pasaje (1 = Primera, 2 = Segunda, 3 = Tercera).
+
+-   Name, Sex, Age: información personal del pasajero.
+
+-   SibSp, Parch: número de hermanos/cónyuges o padres/hijos a bordo.
+
+-   Ticket, Fare, Cabin: detalles del billete, precio pagado y cabina asignada.
+
+-   Embarked: puerto de embarque (C = Cherburgo, Q = Queenstown, S = Southampton).
+
+Para asegurar la fiabilidad de nuestro estudio, evaluaremos también el porcentaje de valores faltantes en variables críticas:
+
+-   Edad (Age): aproximadamente 20 % de los registros sin datos.
+
+-   Cabina (Cabin): más del 70 % ausente, por lo que lo usaremos con cautela.
+
+-   Puerto de embarque (Embarked): solo unos pocos valores faltantes.
+
+Es ***importante*** ***aclarar*** que la falta de algunos valores podrían afectar la visualizacion estadística de los datos, por lo cual cados como "Cabina" que presentan solo un 30% de informacion, podrían no ser tan importantes de cara a evidenciar relaciones entre las variables.
+
+A continuación cargamos los datos.
 
 ```{r load-data}
 # Cargar los datos
-datos <- read_csv(params$data_path)
+ datos <- read_csv(params$data_path)
 ```
 
-# EDA: Gráficas Unidimensionales
+# EDA Unidimensional
 
-Se generan tres gráficas que muestran la distribución de variables con patrones interesantes.
+Una vez cargados los datos en bruto, el primer paso es explorar cada variable de forma individual para entender su distribución y detectar posibles sesgos o valores atípicos. A continuación presentamos tres visualizaciones que nos ayudan a “conocer” mejor a los pasajeros antes de cruzar información entre variables.
+
+### Distribución de Edad
+
+La edad de los pasajeros muestra un amplio rango, desde recién nacidos hasta ancianos. Al graficar un histograma con 30 intervalos, podremos identificar si existen concentraciones en determinados grupos etarios (por ejemplo, presencia de muchos niños pequeños o predominio de adultos jóvenes). Esta visión inicial es fundamental para decidir si, más adelante, es necesario imputar valores faltantes o agrupar la variable en categorías (niños, adultos, ancianos).
 
 ```{r uni-plots}
-# 1. Distribución de edad
-grafica_edad <- ggplot(datos, aes(x = Age, )) +
-  geom_histogram(bins = 30, fill = "#69b3a2", color = "black", size = 0.3) +
-  labs(title = "Distribución de Edad", x = "Edad", y = "Frecuencia")
-girafe(ggobj = grafica_edad)
+# 1. Distribución de Edad
+g1 <- ggplot(datos, aes(x = Age)) +
+  geom_histogram(bins = 30, fill = "#69b3a2", color = "black", na.rm = TRUE) +
+  labs(title = "Distribución de Edad", x = "Edad (años)", y = "Frecuencia") +
+  theme_minimal()
 
-# 2. Conteo por sexo
-grafica_sex <- ggplot(datos, aes(x = Sex, fill = factor(Sex),
-                                 tooltip = paste("Count:", ..count..))) +
-  geom_bar_interactive() +
-  labs(title = "Conteo de Pasajeros por Sexo", x = "Sexo", y = "Cantidad")
-girafe(ggobj = grafica_sex)
-
-# 3. Distribución de tarifa (Fare)
-grafica_tarifa <- ggplot(datos, aes(x = Fare)) +
-  geom_histogram(bins = 30, fill = "#8dbf8d", color = "black", size = 0.3) +
-  labs(title = "Distribución de la Tarifa", x = "Tarifa", y = "Frecuencia")
-girafe(ggobj = grafica_tarifa)
+girafe(ggobj = g1, width_svg = 7, height_svg = 4)
 ```
 
-# EDA: Gráficas Bidimensionales
+> -   ¿Se forma un “pico” alrededor de los 20–30 años?\
+> -   ¿Hay un subgrupo notable de menores de 10 años o de mayores de 60?\
+> -   ¿Qué proporción de la muestra carece de dato de edad y podría afectar análisis posteriores?
 
-Se exploran combinaciones de dos variables con posible interrelación.
+### Conteo por Sexo
+
+El género es un factor crítico para entender las decisiones de evacuación. Un gráfico de barras nos mostrará la proporción de hombres y mujeres abordo, sin mezclarlos aún con la supervivencia. Con este conteo simple confirmamos si existe un desequilibrio de género en la muestra, lo cual podría sesgar las tasas de supervivencia si, por ejemplo, hubiera muchos más hombres que mujeres.
+
+```{r uni-plots2}
+# 2. Conteo por Sexo
+g2 <- ggplot(datos, aes(x = Sex, fill = Sex)) +
+  geom_bar(width = 0.6, na.rm = TRUE) +
+  labs(title = "Cantidad de Pasajeros por Sexo", x = "Sexo", y = "Cantidad") +
+  theme_minimal()
+
+girafe(ggobj = g2, width_svg = 5, height_svg = 4)
+```
+
+> -   ¿Cuál es la proporción aproximada de hombres vs. mujeres?\
+> -   ¿Existe alguna categoría de género no habitual o datos faltantes?\
+> -   ¿Cómo podría este desequilibrio inicial influir en las comparaciones posteriores?
+
+### Distribución de Tarifas
+
+El precio del boleto (`Fare`) es otra dimensión unidimensional clave. Al graficar un histograma con 30 “bins”, observaremos la dispersión de tarifas, desde los boletos más económicos hasta los de lujo extremo. Una distribución muy sesgada hacia valores bajos, con colas largas de valores altos, indicaría la necesidad de usar escalas logarítmicas o agrupar tarifas en rangos para facilitar la interpretación.
+
+```{r uni-plots3}
+# 3. Distribución de Tarifas
+g3 <- ggplot(datos, aes(x = Fare)) +
+  geom_histogram(bins = 35, fill = "#8dbf8d", color = "black", na.rm = TRUE) +
+  labs(title = "Distribución de la Tarifa", x = "Tarifa (USD)", y = "Frecuencia") +
+  theme_minimal()
+
+girafe(ggobj = g3, width_svg = 7, height_svg = 4)
+```
+
+> -   ¿La mayoría de pasajeros pagó una tarifa baja (por debajo de USD 20)?\
+> -   ¿Cuántos boletos superan los USD 100 o USD 200?\
+> -   ¿Es recomendable transformar la variable para análisis posteriores (por ejemplo, `log(Fare + 1)`)?
+
+## EDA Bidimensional
+
+Para profundizar en cómo interactúan dos variables clave con la supervivencia, presentamos a continuación dos visualizaciones que combinan información de clase, edad, tarifa y resultado (sobrevivió o no). Estas gráficas bidimensionales nos permiten ver, de un vistazo, patrones que no aparecen al analizar cada variable aisladamente.
+
+### Proporción de Supervivientes por Clase
+
+Este gráfico de barras apiladas y normalizadas muestra la **proporción** de pasajeros que sobrevivieron en cada una de las tres clases sociales.
 
 ```{r bi-plots}
-# Supervivencia vs Clase y Sexo
-p1 <- ggplot(datos, aes(x = Pclass, fill = factor(Survived))) +
-  geom_bar(position = "fill") +
-  labs(title = "Proporción de Supervivientes por Clase")
+# Proporción de Supervivientes por Clase
+gg1 <- ggplot(datos, aes(x = factor(Pclass), fill = factor(Survived))) +
+  geom_bar(position = "fill", na.rm = TRUE) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Proporción de Supervivientes por Clase", x = "Clase", y = "Proporción", fill = "Supervivió") +
+  theme_minimal()
+ggplotly(gg1)
+```
 
-# Edad vs Tarifa coloreado por supervivencia
-p2 <- ggplot(datos, aes(x = Age, y = Fare, color = factor(Survived))) +
+> -   ¿Qué porcentaje de pasajeros de Primera clase sobrevivió en comparación con Segunda y Tercera?\
+> -   ¿Existe una clara brecha entre clases alta y baja que confirme la “prioridad” de embarque?\
+> -   ¿Cómo influyen factores económicos (precio del ticket) en esta proporción?
+
+### Edad vs Tarifa según Supervivencia
+
+En esta nube de puntos coloreada por supervivencia, cruzamos **edad** (eje X) y **tarifa pagada** (eje Y), para ver si hay una tendencia conjunta entre quién pagó más y quién era más joven.
+
+```{r bi-plots2}
+# Edad vs Tarifa según Supervivencia
+gg2 <- ggplot(datos, aes(x = Age, y = Fare, color = factor(Survived))) +
+  geom_point(alpha = 0.6, na.rm = TRUE) +
+  labs(title = "Edad vs Tarifa según Supervivencia", x = "Edad (años)", y = "Tarifa (USD)", color = "Supervivió") +
+  theme_minimal()
+ggplotly(gg2)
+```
+
+> -   ¿Se observa que los sobrevivientes tienden a tener tarifas más altas?\
+> -   ¿Qué rango de edad muestra mayor densidad de puntos de color “sobrevivió”?\
+> -   ¿Aparecen grupos diferenciados (por ejemplo, niños de tarifa baja vs adultos de tarifa alta)?
+
+Para profundizar aún más, combinamos la categoría de **grupo etario** (“Niños”, “Adultos”, “Adultos mayores”) con la **clase de pasaje** (1ª, 2ª, 3ª) y el **resultado de supervivencia**.
+
+```{r age-group-by-class}
+# 1. Definir grupos de edad
+datos <- datos %>%
+  mutate(
+    age_group = case_when(
+      Age < 18              ~ "Niños",
+      Age >= 18 & Age <= 60 ~ "Adultos",
+      Age > 60              ~ "Adultos mayores",
+      TRUE                  ~ NA_character_
+    ),
+    age_group = factor(age_group, levels = c("Niños","Adultos","Adultos mayores"))
+  )
+
+# 2. Preparar conteos por clase y supervivencia
+age_class_surv <- datos %>%
+  filter(!is.na(age_group)) %>%
+  count(Pclass, age_group, Survived) %>%
+  group_by(Pclass, age_group) %>%
+  mutate(pct = n / sum(n))
+
+# 3. Plot bidimensional
+g_age_class <- ggplot(age_class_surv,
+                      aes(x = age_group, y = pct, fill = factor(Survived))) +
+  geom_col(position = "dodge") +
+  facet_wrap(~ Pclass, nrow = 1, labeller = labeller(Pclass = c("1"="1ª Clase","2"="2ª Clase","3"="3ª Clase"))) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title    = "Supervivencia por Grupo de Edad y Clase",
+    x        = "Grupo de Edad",
+    y        = "Porcentaje dentro de cada clase",
+    fill     = "Sobrevivió"
+  ) +
+  theme_minimal()
+
+girafe(ggobj = g_age_class, width_svg = 9, height_svg = 5)
+```
+
+## EDA Multidimensional: Bubble Chart
+
+Más allá de dos variables, el gráfico de burbujas añade un tercer y cuarto componente: el **tamaño** de la burbuja representa la clase (`Pclass`) y el **color** indica supervivencia. Esto nos permite identificar “clusters” de pasajeros con características similares.
+
+```{r bubble-chart}
+library(ggplot2)
+
+# Filtrar datos y preparar la información
+bubble_data <- datos %>%
+  filter(!is.na(Age), !is.na(Fare), !is.na(Survived)) %>%
+  mutate(Survived = factor(Survived, labels = c("No", "Sí")))
+
+# Crear el gráfico de burbujas
+ggplot(bubble_data, aes(x = Age, y = Fare, size = Pclass, color = Survived)) +
   geom_point(alpha = 0.6) +
-  labs(title = "Edad vs Tarifa según Supervivencia")
+  labs(
+    title = "Relación entre Edad, Tarifa, Clase y Supervivencia",
+    x = "Edad",
+    y = "Tarifa",
+    size = "Clase",
+    color = "Supervivió"
+  ) +
+  theme_minimal()
 
-subplot(ggplotly(p1), ggplotly(p2), nrows = 2)
+
 ```
 
-# EDA: Gráfica Multidimensional
+> -   ¿Las burbujas más grandes (Primera clase) se agrupan en zonas de tarifas altas y mayor sobrevivencia?\
+> -   ¿Existen burbujas pequeñas (Tercera clase) en la zona de baja tarifa que indiquen supervivientes “atípicos”?\
+> -   ¿Cómo se distribuye la edad dentro de cada nivel de clase y supervivencia?
 
-Se incorpora al menos una gráfica con cinco variables simultáneas.
+## Facetas: Puertos de Embarque y Sexo
 
-```{r multi-plot}
-plot_ly(datos, x = ~Age, y = ~Fare, color = ~factor(Pclass), symbol = ~factor(Sex), size = ~SibSp,
-        text = ~paste("Sobrevivió:", Survived)) %>%
-  layout(title = "Multidimensional: Edad, Tarifa, Clase, Sexo, SibSp")
-```
-
-# Facetas
+Para estudiar cómo interactúan tres variables al mismo tiempo, usamos **facetas** que organizan la nube de puntos Edad vs Tarifa según el puerto de embarque (filas) y el sexo (columnas). Con `scales = "free"`, cada panel ajusta sus ejes de forma independiente para resaltar las variaciones locales.
 
 ```{r facetas}
-# Faceta por Embarque y Sexo mostrando edad vs tarifa
-grafica_faceta_edad_vs_tarifa <- ggplot(datos, aes(x = Age, y = Fare)) +
-  geom_point(alpha = 0.5) +
-  facet_grid(Embarked ~ Sex) +
-  labs(title = "Edad vs Tarifa por Embarque y Sexo", x = "Edad", y = "Tarifa")
-girafe(ggobj = grafica_faceta_edad_vs_tarifa)
+grafica_faceta <- ggplot(datos, aes(x = Age, y = Fare)) +
+  geom_point(alpha = 0.5, na.rm = TRUE) +
+  facet_wrap(Embarked ~ Sex, scales = "free", ncol = 2) +
+  labs(title = "Edad vs Tarifa por Puerto de Embarque y Sexo", x = "Edad (años)", y = "Tarifa (USD)") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 10), axis.text = element_text(size = 8))
+
+girafe(ggobj = grafica_faceta, width_svg = 8, height_svg = 5)
 ```
 
-# Imagen Compuesta
+> -   ¿Los pasajeros de Cherburgo pagaron tarifas sistemáticamente más altas que los de Southampton o Queenstown?\
+> -   ¿Cómo varía la dispersión de edades entre hombres y mujeres en cada puerto?\
+> -   ¿Hay paneles con muy pocos datos donde debamos tener cuidado al interpretar?
 
-```{r composite-plot}
-# Composición con tres gráficos: tarifa, edad y clase
-plot_grid(
-  ggplot(datos, aes(x = Fare)) + geom_histogram(bins = 30),
-  ggplot(datos, aes(x = Age)) + geom_histogram(bins = 30),
-  ggplot(datos, aes(x = factor(Pclass), fill = factor(Survived))) + geom_bar(),
-  ncol = 1,
-  labels = c("Tarifa", "Edad", "Supervivencia por Clase")
-)
+## Imagen Compuesta Interactiva
 
+Para cerrar el análisis con un resumen visual poderoso, combinamos tres gráficos interactivos en un solo lienzo mediante `subplot` de **plotly**. Cada panel aporta una dimensión distinta al storytelling:
 
-# Gráfico 1: Supervivencia por Clase
-df_class <- datos %>%
-  group_by(Pclass, Survived) %>%
-  summarise(Count = n()) %>%
-  ungroup()
+1.  **FigA**: Porcentaje de supervivientes por sexo (barras apiladas).\
+2.  **FigB**: Densidad de tarifas por supervivencia (histograma normalizado).\
+3.  **FigC**: Diagrama de pastel de supervivencia por grupo de edad (“Niños”, “Adultos”, “Adultos mayores”).
 
-fig1 <- plot_ly(df_class, x = ~as.factor(Pclass), y = ~Count, color = ~as.factor(Survived),
-                type = "bar") %>%
-  layout(title = "Supervivencia por Clase",
-         xaxis = list(title = "Clase"),
-         yaxis = list(title = "Cantidad"),
-         barmode = "group")
+```{r imagen-compuesta-interactiva, echo=FALSE, message=FALSE}
+# Gráfico A: Porcentaje de Supervivientes por Sexo (barra apilada)
+figA <- plot_ly(datos %>% count(Sex, Survived) %>% mutate(pct = n / sum(n)),
+               x = ~Sex, y = ~pct, color = ~factor(Survived), type = 'bar') %>%
+  layout(barmode = 'stack',
+         title = 'Porcentaje de Supervivientes por Sexo',
+         xaxis = list(title = 'Sexo'),
+         yaxis = list(title = 'Proporción', tickformat = '%'),
+         legend = list(title = list(text = 'Supervivió')))
 
-# Gráfico 2: Distribución de Edad por Supervivencia
-fig2 <- plot_ly(datos, x = ~Age, color = ~as.factor(Survived),
-                type = "histogram", nbinsx = 30, opacity = 0.6) %>%
-  layout(title = "Distribución de Edad por Supervivencia",
-         xaxis = list(title = "Edad"),
-         yaxis = list(title = "Frecuencia"),
-         barmode = "overlay")
+# Gráfico B: Violin de Edad por Supervivencia
+grid_df <- datos %>% filter(!is.na(Age))
+figB <- plot_ly(grid_df, x = ~factor(Survived), y = ~Age, color = ~factor(Survived), type = 'violin', box = list(visible = TRUE), meanline = list(visible = TRUE)) %>%
+  layout(title = 'Distribución de Edad por Supervivencia',
+         xaxis = list(title = 'Supervivió'),
+         yaxis = list(title = 'Edad (años)'),
+         legend = list(title = list(text = 'Supervivió')))
 
-# Gráfico 3: Supervivencia por Puerto de Embarque
-df_port <- datos %>%
-  group_by(Embarked, Survived) %>%
-  summarise(Count = n()) %>%
-  ungroup()
+# Gráfico C: Densidad de Tarifas
+grid_df2 <- datos %>% filter(!is.na(Fare))
+figC <- plot_ly(grid_df2, x = ~Fare, color = ~factor(Survived), type = 'histogram', histnorm = 'density', opacity = 0.6) %>%
+  layout(barmode = 'overlay',
+         title = 'Densidad de Tarifas por Supervivencia',
+         xaxis = list(title = 'Tarifa (USD)'),
+         yaxis = list(title = 'Densidad'),
+         legend = list(title = list(text = 'Supervivió')))
 
-fig3 <- plot_ly(df_port, x = ~Embarked, y = ~Count, color = ~as.factor(Survived),
-                type = "bar") %>%
-  layout(title = "Supervivencia por Puerto de Embarque",
-         xaxis = list(title = "Puerto"),
-         yaxis = list(title = "Cantidad"),
-         barmode = "group")
-
-# Composición de los tres gráficos en una fila
-subplot(fig1, fig2, fig3, nrows = 3, shareY = FALSE, titleX = TRUE, titleY = TRUE) %>%
-  layout(title = "Análisis Compuesto de Supervivencia - Titanic")
+# Combinar los tres gráficos interactivos
+subplot(figA, figB, figC, nrows = 3, shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE)
 ```
+
+> -   FigA destaca la desigualdad de género en el acceso a botes.\
+> -   FigB revela si los niños o ancianos recibieron prioridad.\
+> -   FigC muestra la correlación entre tarifas altas y tasas de rescate.
 
 # Conclusiones
-
-En esta sección se describen las conclusiones principales, reflejando los hallazgos más relevantes del análisis.
