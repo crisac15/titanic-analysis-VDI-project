@@ -1,7 +1,7 @@
 ---
 title: "Análisis Exploratorio de Datos: Sobrevivientes del Titanic"
-author: "Cristopher Acuña Campos
-         Jerson Prendas"
+author: "Cristopher Acuña Campos - 2022437718
+         Jerson Prendas Quirós - 2022437678"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -98,12 +98,15 @@ La edad de los pasajeros muestra un amplio rango, desde recién nacidos hasta an
 
 ```{r uni-plots}
 # 1. Distribución de Edad
-g1 <- ggplot(datos, aes(x = Age)) +
-  geom_histogram(bins = 30, fill = "#69b3a2", color = "black", na.rm = TRUE) +
-  labs(title = "Distribución de Edad", x = "Edad (años)", y = "Frecuencia") +
-  theme_minimal()
-
-girafe(ggobj = g1, width_svg = 7, height_svg = 4)
+plot_ly(datos, x = ~Age, type = "histogram", nbinsx = 35,
+        marker = list(
+          line = list(color = "black", width = 2)  # Borde negro para cada bin
+        )) %>%
+  layout(
+    title = "Distribución de Edad",
+    xaxis = list(title = "Edad (años)"),
+    yaxis = list(title = "Frecuencia")
+  )
 ```
 
 > El histograma de edades nos muestra que la mayoría de la gente a bordo del Titanic tenía entre 20 y 30 años: casi 4 de cada 10 pasajeros. Eso significa que, cuando miremos quién sobrevivió o no, gran parte de la historia vendrá de ese grupo de “veintitantos”.\
@@ -133,12 +136,12 @@ El precio del boleto (`Fare`) es otra dimensión unidimensional clave. Al grafic
 
 ```{r uni-plots3}
 # 3. Distribución de Tarifas
-g3 <- ggplot(datos, aes(x = Fare)) +
-  geom_histogram(bins = 35, fill = "#8dbf8d", color = "black", na.rm = TRUE) +
-  labs(title = "Distribución de la Tarifa", x = "Tarifa (USD)", y = "Frecuencia") +
-  theme_minimal()
-
-girafe(ggobj = g3, width_svg = 7, height_svg = 4)
+plot_ly(datos, x = ~Fare, type = "histogram") %>%
+  layout(
+    title = "Distribución de la Tarifa",
+    xaxis = list(title = "Tarifa (USD)"),
+    yaxis = list(title = "Frecuencia")
+  )
 ```
 
 > La gran mayoría de los pasajeros pagó montos bajos: cerca del 80 % pagó menos de 50 USD por su pasaje. Esa concentración en tarifas crea un énfasis bien definido a la izquierda del gráfico, donde se amontonan los boletos de costo bajo\
@@ -236,16 +239,16 @@ girafe(ggobj = g_age_class, width_svg = 9, height_svg = 5)
 
 > ### Tercera clase (3ª Clase)
 >
-> -   Niños: alrededor del 39 % de los niños de tercera clase sobrevivió, mientras que el 61 % no.
-> -   Adultos: un tercio (33.3 %) de los adultos vivió, y dos tercios (66.7 %) murieron.
+> -   Niños: alrededor del 40 % de los niños de tercera clase sobrevivió, mientras que el 61 % no.
+> -   Adultos: un tercio de los adultos vivió, y dos tercios murieron.
 > -   Adultos mayores: al igual que en segunda clase, ningún mayor de 60 años en tercera clase sobrevivió.\
 >     En tercera clase la supervivencia fue baja en todos los grupos, ligeramente mejor para los niños, pero sin salvar a ningún anciano.
 
 ## 3. Análisis Multidimensional
 
-### 3.1 Bubble Chart: Edad, Tarifa, Clase y Supervivencia
+### 3.1 Bubble Chart: Edad, Tarifa, Clase, Sexo y Supervivencia
 
-Más allá de dos variables, el gráfico de burbujas añade un tercer y cuarto componente: el **tamaño** de la burbuja representa la clase (`Pclass`) y el **color** indica supervivencia. Esto nos permite identificar “clusters” de pasajeros con características similares.
+Más allá de dos variables, el gráfico de burbujas añade un tercer, cuarto y quinto componente: el **tamaño** de la burbuja representa la clase (`Pclass`), la **forma** de la figura representa el sexo y el **color** indica supervivencia. Esto nos permite identificar grupos de pasajeros con características similares.
 
 ```{r bubble-chart-sex-shape, echo=FALSE}
 
@@ -280,20 +283,19 @@ girafe(
   height_svg = 5
 )
 
-
 ```
 
-> Al observar las figuras grandes (primera clase), vemos que casi todas en la zona de tarifas altas (por encima de 100 USD) son de color “Sí”: los pasajeros de primera que pagaron más tuvieron altas probabilidades de sobrevivir, sin importar la edad. Las figuras grandes y rojas (“No”) aparecen solo cuando la tarifa es baja o moderada, mostrando que incluso un viajero de primera clase corría peligro si su pasaje no fue de los más caros.\
+> Al observar las figuras pequeñas (primera clase), vemos que casi todas en la zona de tarifas altas (por encima de 100 USD) son de color “Sí”: los pasajeros de primera que pagaron más tuvieron altas probabilidades de sobrevivir, sin importar la edad. Las figuras grandes y rojas (“No”) aparecen solo cuando la tarifa es baja o moderada, mostrando que incluso un viajero de primera clase corría peligro si su pasaje no fue de los más caros.\
 
 > En las figuras de tamaño mediano (segunda clase), el color está más mezclado: hay algunos “Sí” en tarifas alrededor de 50 USD, pero muchas figuras rojas se extienden desde precios bajos hasta medios. Aquí la edad tampoco define el color: tanto jóvenes como adultos de mediana edad mueren o sobreviven dependiendo más de cuánto pagaron que de cuántos años tenían.\
 
-> Las figuras pequeñas (tercera clase) están casi todas en rojo, especialmente en tarifas bajas (menores de 20 USD). Solo unas pocas tardías suben un poco en el eje y y cambian a verde, y suelen corresponder a adultos jóvenes. Los ancianos de tercera clase (pequeñas figuras en la parte derecha del eje x) permanecen rojos, incluso si la tarifa es algo mayor.
+> Las figuras grandes (tercera clase) están casi todas en rojo, especialmente en tarifas bajas (menores de 20 USD). Solo unas pocas tardías suben un poco en el eje y y cambian a verde, y suelen corresponder a adultos jóvenes. Los ancianos de tercera clase (pequeñas figuras en la parte derecha del eje x) permanecen rojos, incluso si la tarifa es algo mayor.
 
 > Finalmente, es importante destacar que la mayoría de supervivientes presentan una figura circulas, lo que nos indica que el sexo femenino cuenta con un mayor porcentaje de supervivencia que el masculino.De esta manera podríamos suponer que se siguió la regla "mujeres y niños primero".
 
 ## 3.2 Facetas: Edad vs Tarifa por Puerto y Género
 
-Para estudiar cómo interactúan tres variables al mismo tiempo, usamos **facetas** que organizan la nube de puntos Edad vs Tarifa según el puerto de embarque (filas) y el sexo (columnas). Con `scales = "free"`, cada panel ajusta sus ejes de forma independiente para resaltar las variaciones locales.
+Para estudiar cómo interactúan tres variables al mismo tiempo, usamos **facetas** que organizan la nube de puntos Edad vs Tarifa según el puerto de embarque (filas) y el sexo (columnas).
 
 ```{r facetas}
 grafica_faceta <- ggplot(datos, aes(x = Age, y = Fare)) +
@@ -318,7 +320,7 @@ girafe(ggobj = grafica_faceta, width_svg = 8, height_svg = 5)
 >
 > Southampton representa un punto intermedio: las mujeres pagan alrededor de 20 USD y los hombres unos 10 USD, con la mayoría de los boletos en el rango de 7 USD a 40 USD. Hay algunos casos aislados de pasajes caros (hasta 200 USD), pero son minoría. La distribución de edades es similar para ambos sexos, con una aproximado alrededor de 25 años.
 
-## 3.3 Imagen compuesta: Edad vs Tarifa por Puerto y Género
+## 3.3 Imagen compuesta: Porcentajes de supervivencia por puerto y clase
 
 En esta sección presentamos dos visualizaciones clave de forma conjunta para reforzar nuestra narrativa sobre los factores que condicionaron la supervivencia en el Titanic:
 
@@ -386,7 +388,7 @@ fig_heat <- plot_ly(
   )
 ) %>%
   layout(
-    title  = 'Heatmap: Tasa de Supervivencia (%) por Clase y Puerto',
+    title  = 'Tasa de Supervivencia (%) por Clase y Puerto',
     xaxis  = list(title = 'Puerto'),
     yaxis  = list(title = 'Clase'),
     margin = list(l = 60, r = 120, t = 50, b = 50)
@@ -413,86 +415,15 @@ subplot(
 
 # Conclusiones
 
-El análisis exploratorio de los datos del Titanic revela patrones complejos de supervivencia influenciados por una combinación de factores socioeconómicos, demográficos y logísticos. A continuación, sintetizamos los hallazgos clave:
+A partir del estudio de los datos del Titanic se identifican varios mecanismos de desigualdad que determinaron quién vivió y quién murió aquella noche de abril de 1912. A continuación, se presentan las conclusiones en un estilo de prosa sencillo, propio de un universitario, que integra los hallazgos más relevantes.
 
-------------------------------------------------------------------------
+Primero, la clase social funcionó como el factor decisivo en la supervivencia. Los pasajeros de primera clase tuvieron casi la mitad de sus miembros a salvo (46 %), mientras que los de segunda y tercera apenas superaron un tercio (32 % y 33 %, respectivamente). Esta brecha se profundiza si se examinan las tarifas pagadas: quienes abonaron más de 100 USD vieron cómo su probabilidad de vivir se acercaba al 70 %. Incluso entre los mayores de 60 años, la ventaja de viajar en primera clase fue clara: aquellos ancianos ubicados en las cubiertas superiores lograron salvarse con mucha más frecuencia que sus coetáneos en las cubiertas bajas. En cambio, en tercera clase los más viejos no tuvieron ninguna oportunidad de supervivencia. La explicación radica en el acceso preferente a los botes salvavidas y en una distribución física del espacio que privilegiaba a los pasajeros de mayores recursos.
 
-## 1. **Clase Social: El Determinante Principal**
+En segundo lugar, el género ejerció una influencia secundaria pero no menos interesante. “Mujeres y niños primero” fue la consigna, y, en efecto, las mujeres sobrevivieron en proporción superior a los hombres en todas las clases. Sin embargo, esa ventaja no fue uniforme: una mujer de tercera clase tenía peores probabilidades que un hombre de primera. Es decir, el sesgo de género operó siempre dentro del marco de la estratificación por clase; sin recursos económicos, la protección preferente a las mujeres perdió parte de su eficacia.
 
--   **Primera clase**:
-    -   Supervivencia del **46%**, claramente mayor a segunda y tercera clase (**32%** y **33%**).\
-    -   Pasajeros con tarifas \>100 USD tuvieron tasas cercanas al **70%** (Gráfico burbujas).\
-    -   Adultos mayores (60+ años) en primera clase sobrevivieron más que en otras clases (Gráfico de grupos de edad).
--   **Tercera clase**:
-    -   Solo el **33%** sobrevivió, con tasas críticas para ancianos (**0%**) y niños (menor que en 1ra y 2da).\
-    -   Concentración de víctimas en tarifas \<20 USD (Gráfico *Edad vs Tarifa*).
+El análisis de la edad y la tarifa refuerza estas ideas. Ninguno de los niños de primera clase murió, mientras que en tercera su chance de salvarse cayó por debajo del 20 %. Los adultos jóvenes y de mediana edad mostraron patrones intermedios, sin llegar a las cotas de los ancianos en primera clase; estos últimos, con una tasa de supervivencia cercana al 57 %, únicamente lo consiguieron si viajaban en primera clase. La tarifa pagada actuó así como un indicador indirecto de la posición en el barco: más dinero significaba mejor ubicación y, por tanto, mayor probabilidad de alcanzar un bote salvavidas.
 
-> **Clave**: La ubicación en cubiertas superiores y el acceso prioritario a botes convirtieron la clase social en el factor más decisivo.
-
-------------------------------------------------------------------------
-
-## 2. **Género: Una Ventaja Relativa**
-
--   **Mujeres**:
-    -   Supervivencia del **74%** vs **19%** en hombres.\
-    -   En tercera clase, solo el **12%** de las mujeres sobrevivió, comparado con el **97%** en primera (Facetas).
--   **Hombres**:
-    -   Mayor mortalidad en todas las clases, especialmente en tercera (**86%** fallecidos).\
-    -   Niños varones en primera clase: **0%** de supervivencia (Gráfico de grupos de edad).
-
-> **Clave**: La política de género favoreció a las mujeres, pero su efectividad dependió críticamente de la clase social.
-
-------------------------------------------------------------------------
-
-## 3. **Edad y Tarifa: Factores Secundarios pero Reveladores**
-
--   **Niños (\<18 años)**:
-    -   Supervivencia del **53%**, pero con disparidades extremas:
-        -   **0%** en primera clase vs **60%** en segunda (Gráfico de grupos de edad).
--   **Tarifa**:
-    -   Correlación positiva con supervivencia (r = 0.25).\
-    -   Pasajeros que pagaron \>50 USD tuvieron una tasa del **68%** vs **22%** en tarifas \<20 USD (Heatmap).
-
-> **Clave**: La tarifa actuó como proxy de ubicación física en el barco, no solo de recursos económicos.
-
-------------------------------------------------------------------------
-
-## 4. **Puerto de Embarque: El Factor Olvidado**
-
--   **Cherburgo (C)**:
-    -   Mayor proporción de pasajeros de primera clase (**47%**) y supervivencia general del **55%**.\
-    -   Tasas altas incluso en tercera clase (**22%** vs **13%** en Southampton).
--   **Queenstown (Q)**:
-    -   Polarización extrema: **100%** de supervivencia en primera clase vs **0%** en segunda.
-
-> **Clave**: El puerto reflejó composiciones socioeconómicas distintas, donde Cherburgo agrupó a pasajeros adinerados.
-
-------------------------------------------------------------------------
-
-## 5. **Interacciones Multidimensionales**
-
--   **Combinación crítica**:\
-    Hombres de tercera clase, embarcados en Southampton, con tarifas \<20 USD tuvieron una mortalidad del **89%** (Gráfico de burbujas + Heatmap).
-
--   **Excepciones notables**:
-
-    -   Mujeres en primera clase con tarifas \>200 USD: **100%** de supervivencia.\
-    -   Niñas en segunda clase: **80%** salvadas vs **40%** de niños varones.
-
-> **Clave**: La supervivencia fue el resultado de intersecciones complejas entre variables, no de factores aislados.
-
-------------------------------------------------------------------------
-
-## **Lecciones Históricas y Éticas**
-
-1.  **Desigualdad estructural**:\
-    La ubicación física en el barco (vinculada a la clase) fue más determinante que normas humanitarias.
-
-2.  **Sesgo de género**:\
-    La ventaja femenina se diluyó en ausencia de recursos económicos.
-
-3.  **Vulnerabilidad ignorada**:\
-    Ancianos y niños de clases bajas quedaron sistemáticamente excluidos.
+Un cuarto factor, a menudo subestimado, fue el puerto de embarque. Cherburgo (C) concentró a pasajeros de mayores ingresos y presentó una supervivencia del 55 %: allí, las mujeres compraron billetes más caros en promedio que los hombres, reflejo de una composición social más acomodada. Queenstown (Q) mostró una polarización extrema: todos los pasajeros de primera clase sobrevivieron, mientras que ningún viajero de segunda—quizá por el reducido número de billetes vendidos en esa escala—logró salvarse. Southampton, con su mezcla más heterogénea, ofreció tasas intermedias.
 
 > **Reflexión final**:\
-> Este análisis no solo explica patrones históricos, sino que advierte sobre cómo las desigualdades socioeconómicas pueden distorsionar políticas de emergencia en crisis modernas.
+> Estas evidencias invitan a reflexionar en términos históricos y éticos. La desigualdad estructural terminó siendo más determinante que los principios de humanidad. El sesgo de género, aunque real, dependió de la clase para desplegarse. Y los grupos más vulnerables (niños y ancianos de tercera clase) quedaron sistemáticamente excluidos del auxilio. Hoy, esas lecciones recuerdan que, en toda emergencia, las barreras socioeconómicas pueden menoscabar las políticas de protección y agravar el sufrimiento de quienes menos recursos tienen.
